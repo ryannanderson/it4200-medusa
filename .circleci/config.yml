@@ -1,0 +1,44 @@
+version 2.1
+
+  jobs:
+    build-assets:
+      docker:
+        - image: cimg/node:18.11.0
+
+    steps:
+      - checkout
+
+      - run:
+         name: "What Branch Am I On?"
+         command: |
+           echo "$CIRCLE_BRANCH"
+      - run:
+         name: "Will this work?"
+         command: |
+           echo "${CIRCLE_BRANCH}"
+      - restore_cache:
+          keys:
+            - deps-v1--{{ checksum "medusa-starter-default/package-lock.json"}}
+            - deps-v1--
+
+      - run:
+          name: "Build storefront deps"
+          command: |
+            cd medusa-starter-default &&
+            npm i
+      - save_cache:
+          paths:
+            # - my-medusa-starter/node_modules
+            - medusa-starter-default/node_modules
+          key: deps-v1--{{ checksum "medusa-starter-default/package-lock.json"}}
+
+workflows:
+  build-assets:
+    jobs:
+      - build-storefront:
+          context:
+            - Staging
+          filters:
+            branches:
+              only:
+                - circle-branch
